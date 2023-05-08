@@ -139,4 +139,61 @@ pollController.get('/download/votedby/:pollId/question/:questionId/option/:optio
     res.end();
 });
 
+pollController.get('/regenrate-polls/:endedPollId', async (req, res) => {
+  try {
+    if (!req.headers.authorization) {
+      return res.send('Please login again');
+    } else {
+      const token = req.headers.authorization.split(' ')[1];
+      const userToken = decryptToken(token);
+      const user = await UserModel.find({ email: userToken.email });
+      const userRole = user[0].userRole;
+      if (userRole !== 'admin') {
+        res.send('Only admin is allowed to see a poll');
+      } else {
+        const adminId = user[0]._id;
+        const { endedPollId } = req.params;
+        if (endedPollId) {
+          const endedPoll = await PollModel.findOne({ _id: endedPollId, adminId });
+          if (!endedPoll) {
+            return res.status(404).send('Poll not found');
+          }
+          res.send(endedPoll);
+        } else {
+          const endedPolls = await PollModel.find({ adminId });
+          res.send(endedPolls);
+        }
+      }
+    }
+  } catch (error) {
+    res.status(500).send('Failed to retrieve poll data.');
+  }
+});
+
+pollController.delete('/delete-ended-polls/:endedPollId', async (req, res) => {
+  try {
+    if (!req.headers.authorization) {
+      return res.send('Please login again');
+    } else {
+      const token = req.headers.authorization.split(' ')[1];
+      const userToken = decryptToken(token);
+      const user = await UserModel.find({ email: userToken.email });
+      const userRole = user[0].userRole;
+      if (userRole !== 'admin') {
+        res.send('Only admin is allowed to delete a poll');
+      } else {
+        const adminId = user[0]._id;
+        const { endedPollId } = req.params;
+        const deletedPoll = await PollModel.findOneAndDelete({ _id: endedPollId, adminId });
+        if (!deletedPoll) {
+          return res.status(404).send('Poll not found');
+        }
+        res.send('Poll deleted successfully');
+      }
+    }
+  } catch (error) {
+    res.status(500).send('Failed to delete poll.');
+  }
+});
+
 module.exports={pollController}

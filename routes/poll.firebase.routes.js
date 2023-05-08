@@ -212,6 +212,49 @@ firebaseController.get("/live-poll/:pollId", async (req, res) => {
   }
 });
 
+firebaseController.delete("/live-poll/:pollId", async (req, res) => {
+  const pollId = req.params.pollId;
+  if (!req.headers.authorization) {
+    return res.status(401).send("Please login again");
+  } else {
+    try {
+      await fireDb.ref(`polls/${pollId}`).remove();
+      res.status(201).send({ msg: "Deleted Succesfully" });
+    } catch (error) {
+      return res.send({ error });
+    }
+  }
+});
+
+// update poll
+firebaseController.patch("/update-poll/:pollId", async (req, res) => {
+  const pollId = req.params.pollId;
+  const updateData = req.body;
+
+  try {
+    const snapshot = await fireDb.ref(`polls/${pollId}`).once("value");
+    const pollData = snapshot.val();
+
+    if (!pollData) {
+      return res.status(404).send("Poll not found");
+    }
+
+    const token = req.headers.authorization.split(" ")[1];
+    const userToken = decryptToken(token);
+    const user = await UserModel.find({ email: userToken.email });
+    const userRole = user[0].userRole;
+
+    if (userRole !== "admin") {
+      return res.status(403).send("Only admin is allowed to update a poll");
+    }
+
+    await fireDb.ref(`polls/${pollId}`).update(updateData);
+    return res.send("Poll updated successfully");
+  } catch (error) {
+    console.error("Update failed:", error.message);
+    return res.status(500).send("Internal Server Error");
+  }
+});
 
   
 module.exports = {
