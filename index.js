@@ -42,7 +42,7 @@ passport.use(
       clientID:
         "207569143898-5g5hp5q12aku0ks5j32pnmcfmtsc9jjd.apps.googleusercontent.com",
       clientSecret: "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",
-      callbackURL: "http://localhost:8080/auth/google/callback",
+      callbackURL: "https://deploying-eo0h.onrender.com/auth/google/callback",
     },
     (accessToken, refreshToken, profile, cb) => {
       // Callback function after successful authentication
