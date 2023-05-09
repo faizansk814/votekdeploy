@@ -79,7 +79,7 @@ app.get(
   (req, res) => {
     const userEmail = req.user.emails[0].value;
     const userName = req.user.displayName;
-    res.redirect(`http://localhost:3000/?name=${userName}&email=${userEmail}`);
+    res.redirect(`https://masaivotek.netlify.app/?name=${userName}&email=${userEmail}`);
   }
 );
 
