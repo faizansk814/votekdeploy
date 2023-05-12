@@ -184,7 +184,7 @@ pollController.delete('/delete-ended-polls/:endedPollId', async (req, res) => {
       } else {
         const adminId = user[0]._id;
         const { endedPollId } = req.params;
-        const deletedPoll = await PollModel.findOneAndDelete({ _id: endedPollId, adminId });
+        const deletedPoll = await PollModel.findOneAndDelete({ pollId: endedPollId, adminId });
         if (!deletedPoll) {
           return res.status(404).send('Poll not found');
         }
