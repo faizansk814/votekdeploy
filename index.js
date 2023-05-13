@@ -18,6 +18,7 @@ const server = http.createServer(app);
 
 const swaggerUI = require("swagger-ui-express");
 const YAML = require("yamljs");
+const anonymysrouter = require("./routes/anonymys.routes");
 const swaggerJsDocs = YAML.load("./api.yaml");
 
 const fireDb = firebase.database();
@@ -93,6 +94,7 @@ app.use("/firebase", firebaseController);
 app.use("/auth", authController); // login
 app.use("/poll", pollController);
 app.use("/template", templateController);
+app.use("/anonymys",anonymysrouter)
 
 // ---------------Socket.io setup to get live changes ------->
 const io = new Server({
