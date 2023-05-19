@@ -212,6 +212,25 @@ firebaseController.get("/live-poll/:pollId", async (req, res) => {
   }
 });
 
+firebaseController.get("/live-poll-anony/:pollId", async (req, res) => {
+  const pollId = req.params.pollId;
+    fireDb.ref(`polls/${pollId}`).once(
+      "value",
+      (snapshot) => {
+        const pollData = snapshot.val();
+        if (!pollData) {
+          res.status(404).send("Poll not found");
+          return;
+        }
+        const newPoll = pollDataToUser(pollData);
+        res.json(newPoll);
+      },
+      (error) => {
+        res.status(500).send("Internal Server Error");
+      }
+    );
+});
+
 firebaseController.delete("/live-poll/:pollId", async (req, res) => {
   const pollId = req.params.pollId;
   if (!req.headers.authorization) {
