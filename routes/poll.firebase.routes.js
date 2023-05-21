@@ -12,7 +12,7 @@ const app = express();
 app.use(express.json());
 
 firebaseController.post("/create-poll", async (req, res) => {
-  const { pollName, questions, pollStatus, pollCreatedAt, pollEndsAt } =
+  const { pollName, questions, pollStatus, pollCreatedAt, pollEndsAt,pollTag } =
     req.body;
 
   if (!req.headers.authorization) {
@@ -68,6 +68,7 @@ firebaseController.post("/create-poll", async (req, res) => {
         pollCreatedAt,
         pollEndsAt,
         pollUrl,
+        pollTag
       };
 
       pollRef
@@ -209,6 +210,33 @@ firebaseController.get("/live-poll/:pollId", async (req, res) => {
         res.status(500).send("Internal Server Error");
       }
     );
+  }
+});
+
+
+
+firebaseController.get("/live-poll/:pollTag", async (req, res) => {
+  if (!req.headers.authorization) {
+    return res.status(401).send("Please login again");
+  } else {
+    const dbRef = firebase.database().ref("polls");
+
+    // Define the filtering criteria
+    const filterCriteria = "pollTag";
+    const filterValue = req.params.pollTag;
+    
+    // Construct the filter query
+    const filterQuery = dbRef.orderByChild(filterCriteria).equalTo(filterValue);
+    
+    // Execute the filter query
+    filterQuery.once("value", (snapshot) => {
+      // Retrieve the filtered data from the snapshot
+      const filteredData = snapshot.val();
+      
+      // Process the filtered data as needed
+      // ...
+      res.send(filteredData)
+    });
   }
 });
 

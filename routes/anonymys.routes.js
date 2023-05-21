@@ -9,6 +9,7 @@ const fireDb = firebase.database();
 anonymysrouter.post("/vote", async (req, res) => {
   const { pollId, selectedAnswers } = req.body;
   const userId=ip.address()+pollId;
+  console.log(userId)
     const pollRef = firebase.database().ref("polls/" + pollId);
 
     pollRef.child("usersAttended").once("value", async function (snapshot) {
