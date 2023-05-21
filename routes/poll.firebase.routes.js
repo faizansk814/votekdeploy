@@ -215,7 +215,7 @@ firebaseController.get("/live-poll/:pollId", async (req, res) => {
 
 
 
-firebaseController.get("/live-poll/:pollTag", async (req, res) => {
+firebaseController.get("/live-poll-tag/:pollTag", async (req, res) => {
   if (!req.headers.authorization) {
     return res.status(401).send("Please login again");
   } else {
