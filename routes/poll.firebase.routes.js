@@ -171,21 +171,50 @@ firebaseController.get("/live-polls", async (req, res) => {
     if (!req.headers.authorization) {
       return res.send("Please login again");
     } else {
-      const token = req.headers.authorization.split(" ")[1];
-      const userToken = decryptToken(token);
-      const user = await UserModel.find({ email: userToken.email });
-      const userRole = user[0].userRole;
-      if (userRole !== "admin") {
-        res.send("Only admin is allowed to see a poll");
-      } else {
-        const adminId = user[0]._id;
-        const filteredPolls = newPoll.filter(
-          (poll) => poll.adminId === adminId.toString()
-        );
-        res.send(filteredPolls);
+      const { pollTag } = req.query;
+      console.log(pollTag);
+      if(pollTag=="allPolls"){
+        const token = req.headers.authorization.split(" ")[1];
+        const userToken = decryptToken(token);
+        const user = await UserModel.find({ email: userToken.email });
+        const userRole = user[0].userRole;
+        if (userRole !== "admin") {
+          res.send("Only admin is allowed to see a poll");
+        } else {
+          const adminId = user[0]._id;
+          const filteredPolls = newPoll.filter(
+            (poll) => poll.adminId === adminId.toString()
+          );
+          res.send(filteredPolls);
+        }
+      }else{  
+        const dbRef = firebase.database().ref("polls");
+
+        // Define the filtering criteria
+        const filterCriteria = "pollTag";
+        const filterValue = pollTag;
+    
+        // Construct the filter query
+        const filterQuery = dbRef.orderByChild(filterCriteria).equalTo(filterValue);
+    
+        // Execute the filter query
+        filterQuery.once("value", (snapshot) => {
+          // Retrieve the filtered data from the snapshot
+          const filteredData = snapshot.val();
+    
+          // Process the filtered data as needed
+          // ...
+          if (!filteredData) {
+            // console.log("No data found for the given filter criteria");
+            res.send("No data found");
+            return;
+          }
+          res.send(filteredData);
+        });
       }
     }
   } catch (error) {
+    console.log(error);
     res.status(500).send("Failed to retrieve poll data.");
   }
 });
@@ -215,35 +244,7 @@ firebaseController.get("/live-poll/:pollId", async (req, res) => {
 
 
 
-firebaseController.get("/live-poll-tag/:pollTag", async (req, res) => {
-  if (!req.headers.authorization) {
-    return res.status(401).send("Please login again");
-  } else {
-    const dbRef = firebase.database().ref("polls");
 
-    // Define the filtering criteria
-    const filterCriteria = "pollTag";
-    const filterValue = req.params.pollTag;
-    
-    // Construct the filter query
-    const filterQuery = dbRef.orderByChild(filterCriteria).equalTo(filterValue);
-    
-    // Execute the filter query
-    filterQuery.once("value", (snapshot) => {
-      // Retrieve the filtered data from the snapshot
-      const filteredData = snapshot.val();
-      
-      // Process the filtered data as needed
-      // ...
-      if (!filteredData) {
-        // console.log("No data found for the given filter criteria");
-        res.send("No data found");
-        return;
-      }
-      res.send(filteredData)
-    });
-  }
-});
 
 firebaseController.get("/live-poll-anony/:pollId", async (req, res) => {
   const pollId = req.params.pollId;
