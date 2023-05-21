@@ -235,6 +235,11 @@ firebaseController.get("/live-poll-tag/:pollTag", async (req, res) => {
       
       // Process the filtered data as needed
       // ...
+      if (!filteredData) {
+        // console.log("No data found for the given filter criteria");
+        res.send("No data found");
+        return;
+      }
       res.send(filteredData)
     });
   }
