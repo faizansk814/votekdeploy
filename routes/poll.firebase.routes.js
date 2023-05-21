@@ -1,10 +1,10 @@
 "use strict";
 const { Router } = require("express");
 const firebaseController = Router();
-const {firebase} = require('../config/db');
-const { pollDataToUser,decryptToken, pollToArray} = require("../utils/utils");
-const {UserModel} = require("../models/User.model")
-const fireDb = firebase.database(); 
+const { firebase } = require('../config/db');
+const { pollDataToUser, decryptToken, pollToArray } = require("../utils/utils");
+const { UserModel } = require("../models/User.model")
+const fireDb = firebase.database();
 const bodyParser = require('body-parser');
 const express = require("express")
 
@@ -12,7 +12,7 @@ const app = express();
 app.use(express.json());
 
 firebaseController.post("/create-poll", async (req, res) => {
-  const { pollName, questions, pollStatus, pollCreatedAt, pollEndsAt,pollTag } =
+  const { pollName, questions, pollStatus, pollCreatedAt, pollEndsAt, pollTag } =
     req.body;
 
   if (!req.headers.authorization) {
@@ -32,7 +32,7 @@ firebaseController.post("/create-poll", async (req, res) => {
         { email: userToken.email },
         { $push: { pollsCreated: { pollId: pollId } } }
       );
-      
+
       const pollUrl = ` https://votekmasai.netlify.app/event/${pollId}`;
       const formattedQuestions = questions.map((question) => {
         const questionRef = pollRef.child("questions").push();
@@ -137,12 +137,12 @@ firebaseController.post("/vote", async (req, res) => {
                 option.votes++;
                 if (option.votedBy == null) {
                   option.votedBy = [];
-              }
-              option.votedBy.push({
+                }
+                option.votedBy.push({
                   email: userToken.email,
                   userId: userId,
                   fullName: user[0].fullName
-              });
+                });
               });
               question.totalVotes++;
             }
@@ -173,7 +173,7 @@ firebaseController.get("/live-polls", async (req, res) => {
     } else {
       const { pollTag } = req.query;
       console.log(pollTag);
-      if(pollTag=="allPolls"){
+      if (pollTag == "allPolls") {
         const token = req.headers.authorization.split(" ")[1];
         const userToken = decryptToken(token);
         const user = await UserModel.find({ email: userToken.email });
@@ -187,29 +187,31 @@ firebaseController.get("/live-polls", async (req, res) => {
           );
           res.send(filteredPolls);
         }
-      }else{  
+      } else {
         const dbRef = firebase.database().ref("polls");
 
         // Define the filtering criteria
         const filterCriteria = "pollTag";
         const filterValue = pollTag;
-    
+
         // Construct the filter query
         const filterQuery = dbRef.orderByChild(filterCriteria).equalTo(filterValue);
-    
+
         // Execute the filter query
         filterQuery.once("value", (snapshot) => {
           // Retrieve the filtered data from the snapshot
           const filteredData = snapshot.val();
-    
+
+          // Convert the filtered data from objects to an array of objects
+          const dataArray = Object.keys(filteredData).map((key) => filteredData[key]);
+
           // Process the filtered data as needed
           // ...
-          if (!filteredData) {
-            // console.log("No data found for the given filter criteria");
+          if (dataArray.length === 0) {
             res.send("No data found");
             return;
           }
-          res.send(filteredData);
+          res.send(dataArray);
         });
       }
     }
@@ -228,7 +230,7 @@ firebaseController.get("/live-poll/:pollId", async (req, res) => {
       "value",
       (snapshot) => {
         const pollData = snapshot.val();
-         if (!pollData) {
+        if (!pollData) {
           res.status(404).send("Poll not found");
           return;
         }
@@ -248,21 +250,21 @@ firebaseController.get("/live-poll/:pollId", async (req, res) => {
 
 firebaseController.get("/live-poll-anony/:pollId", async (req, res) => {
   const pollId = req.params.pollId;
-    fireDb.ref(`polls/${pollId}`).once(
-      "value",
-      (snapshot) => {
-        const pollData = snapshot.val();
-        if (!pollData) {
-          res.status(404).send("Poll not found");
-          return;
-        }
-        const newPoll = pollDataToUser(pollData);
-        res.json(newPoll);
-      },
-      (error) => {
-        res.status(500).send("Internal Server Error");
+  fireDb.ref(`polls/${pollId}`).once(
+    "value",
+    (snapshot) => {
+      const pollData = snapshot.val();
+      if (!pollData) {
+        res.status(404).send("Poll not found");
+        return;
       }
-    );
+      const newPoll = pollDataToUser(pollData);
+      res.json(newPoll);
+    },
+    (error) => {
+      res.status(500).send("Internal Server Error");
+    }
+  );
 });
 
 firebaseController.delete("/live-poll/:pollId", async (req, res) => {
@@ -309,7 +311,7 @@ firebaseController.patch("/update-poll/:pollId", async (req, res) => {
   }
 });
 
-  
+
 module.exports = {
   firebaseController,
 };
